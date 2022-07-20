@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { Gallery } from './ImageGallery.styled';
 import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 
-const ImageGallery = ({ data, isQueryCorrect }) => {
+const ImageGallery = ({ data, isQueryCorrect, onModalState }) => {
   return (
     <Gallery>
       {isQueryCorrect ? (
@@ -11,6 +11,7 @@ const ImageGallery = ({ data, isQueryCorrect }) => {
             key={id}
             webformatURL={webformatURL}
             largeImageURL={largeImageURL}
+            onModalState={onModalState}
           />
         ))
       ) : (

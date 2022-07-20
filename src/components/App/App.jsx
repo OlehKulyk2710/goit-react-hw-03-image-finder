@@ -6,6 +6,7 @@ import { AppContainer } from './App.styled';
 import Searchbar from '../Searchbar/Searchbar';
 import ImageGallery from '../ImageGallery/ImageGallery';
 import Button from '../Button/Button';
+import Modal from 'components/Modal/Modal';
 import Loader from 'components/Loader/Loader';
 
 export class App extends Component {
@@ -18,6 +19,8 @@ export class App extends Component {
     btnState: false,
     error: '',
     isLoading: false,
+    modalImage: '',
+    isModalOpen: false,
   };
 
   onSubmit = async query => {
@@ -27,21 +30,24 @@ export class App extends Component {
     this.getApiData();
   };
 
-  handleData = async data => {
+  handleData = data => {
     const { total, hits } = data;
     const { pageNumber } = this.state;
 
-    total === 0
-      ? await this.setState({ totalPages: total, isQueryCorrect: false })
-      : await this.setState({ totalPages: total, isQueryCorrect: true });
+    if (total === 0) {
+      this.setState({ totalPages: total, isQueryCorrect: false });
+    } else {
+      this.setState({ totalPages: total, isQueryCorrect: true });
+    }
 
-    pageNumber === 1
-      ? await this.setState({ data: hits })
-      : await this.setState(prevState => ({
-          data: [...prevState.data, ...hits],
-        }));
+    if (pageNumber === 1) {
+      this.setState({ data: hits });
+    } else {
+      this.setState(prevState => ({
+        data: [...prevState.data, ...hits],
+      }));
+    }
 
-    // console.log(total, hits);
     setTimeout(() => this.handleBtnState(), 25);
   };
 
@@ -52,7 +58,7 @@ export class App extends Component {
     this.getApiData();
   };
 
-  handleBtnState = async () => {
+  handleBtnState = () => {
     const { pageNumber, totalPages } = this.state;
     const pagesToShow = Math.ceil((totalPages - pageNumber * 12) / 12);
     pagesToShow >= 1
@@ -60,9 +66,14 @@ export class App extends Component {
       : this.setState({ btnState: false });
   };
 
+  handleModalState = (image = '') => {
+    this.setState({ imageModal: image });
+    this.setState(prevState => ({ isModalOpen: !prevState.isModalOpen }));
+  };
+
   getApiData = async () => {
     const { query, pageNumber } = this.state;
-    await this.setState({ btnState: false, isLoading: true });
+    this.setState({ btnState: false, isLoading: true });
 
     try {
       const response = await pixabayApi({ query, pageNumber });
@@ -77,20 +88,37 @@ export class App extends Component {
   };
 
   render() {
-    const { query, isQueryCorrect, data, btnState, error, isLoading } =
-      this.state;
-    // console.log(data);
+    const {
+      query,
+      isQueryCorrect,
+      data,
+      btnState,
+      error,
+      isLoading,
+      imageModal,
+      isModalOpen,
+    } = this.state;
 
     return (
       <AppContainer>
         <Searchbar onSubmit={this.onSubmit} />
         {error && <p>{this.state.error}</p>}
-        {query && <ImageGallery data={data} isQueryCorrect={isQueryCorrect} />}
+        {query && (
+          <ImageGallery
+            data={data}
+            isQueryCorrect={isQueryCorrect}
+            onModalState={this.handleModalState}
+            isModalOpen={isModalOpen}
+          />
+        )}
         {btnState && <Button onBtnClick={this.handleBtnClick} />}
         {isLoading && (
           <Loader>
             <Watch color="#4d5eb3" />
           </Loader>
+        )}
+        {isModalOpen && (
+          <Modal image={imageModal} onModalClose={this.handleModalState} />
         )}
       </AppContainer>
     );
